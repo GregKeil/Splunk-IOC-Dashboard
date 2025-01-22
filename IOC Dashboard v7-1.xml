@@ -46,7 +46,7 @@
       <title>IOCs Detectable in Splunk (Runs Nightly @0000)</title>
       <single>
         <search>
-          <query>| loadjob savedsearch="g.keil:DCO:Total IOC Count"
+          <query>| loadjob savedsearch="<User>:<App>:<ReportName>"
 ```
 | inputlookup IP_iocs_KV | stats count as IP_IOC_COUNT
 | append [ | inputlookup URL_iocs_KV    | stats count as URL_IOC_COUNT    ]
