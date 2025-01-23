@@ -1,9 +1,0 @@
-| inputlookup IP_iocs_KV | stats count as IP_IOC_COUNT
-| append [ | inputlookup URL_iocs_KV    | stats count as URL_IOC_COUNT    ]
-| append [ | inputlookup Domain_iocs_KV | stats count as Domain_IOC_COUNT ]
-| append [ | inputlookup MD5_iocs_KV    | stats count as MD5_IOC_COUNT    ]
-| append [ | inputlookup SHA256_iocs_KV | stats count as SHA256_IOC_COUNT ]
-| addtotals fieldname=sum
-| table sum
-| stats sum(sum) as grand_total
-| table grand_total
