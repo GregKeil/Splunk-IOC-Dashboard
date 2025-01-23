@@ -16,6 +16,7 @@ This dashboard is designed to identify IOC matches from a lookup file.
 - **URL_iocs.csv** Lookup File (Data Needed)
 - **MD5_iocs.csv** Lookup File (Data Needed)
 - **SHA256_iocs.csv** Lookup File (Data Needed)
+- **IOC Dashboard v7-1.xml** is the source code for the dashboard
  
 ### Recommendations: 
 - **Splunk App For Lookup File Editing**
@@ -26,3 +27,4 @@ This dashboard is designed to identify IOC matches from a lookup file.
 
 ## Other Notes:
 - It is recommended that you pull your IOCs from Crowdstrike. The fields in the CSV are designed to match.
+- The _Hashes_Datamodel.json_ is the same datamodel used for the _Suricata Alert Dashboard For Splunk_
