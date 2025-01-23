@@ -16,11 +16,11 @@ This dashboard is designed to identify IOC matches from a lookup file.
   - https://splunkbase.splunk.com/app/5466
 - **Hashes.json** (Datamodel) must be configured and installed
 - **Zeek.json** (Datamodel) must be configured and installed
-- **IP_iocs.csv** Lookup File
-- **Domain_iocs.csv** Lookup File
-- **URL_iocs.csv** Lookup File
-- **MD5_iocs.csv** Lookup File
-- **SHA256_iocs.csv** Lookup File
+- **IP_iocs.csv** Lookup File (Data Needed)
+- **Domain_iocs.csv** Lookup File (Data Needed)
+- **URL_iocs.csv** Lookup File (Data Needed)
+- **MD5_iocs.csv** Lookup File (Data Needed)
+- **SHA256_iocs.csv** Lookup File (Data Needed)
  
 ### Recommendations: 
 - **Splunk App For Lookup File Editing**
