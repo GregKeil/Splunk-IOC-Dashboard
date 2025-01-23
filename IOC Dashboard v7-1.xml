@@ -43,21 +43,19 @@
   </fieldset>
   <row>
     <panel>
-      <title>IOCs Detectable in Splunk (Runs Nightly @0000)</title>
+      <title>IOCs Detectable in Splunk</title>
       <single>
         <search>
-          <query>| loadjob savedsearch="<User>:<App>:<ReportName>"
-```
-| inputlookup IP_iocs_KV | stats count as IP_IOC_COUNT
-| append [ | inputlookup URL_iocs_KV    | stats count as URL_IOC_COUNT    ]
-| append [ | inputlookup Domain_iocs_KV | stats count as Domain_IOC_COUNT ]
-| append [ | inputlookup MD5_iocs_KV    | stats count as MD5_IOC_COUNT    ]
-| append [ | inputlookup SHA256_iocs_KV | stats count as SHA256_IOC_COUNT ]
+          <query>
+| inputlookup IP_iocs.csv | stats count as IP_IOC_COUNT
+| append [ | inputlookup URL_iocs.csv    | stats count as URL_IOC_COUNT    ]
+| append [ | inputlookup Domain_iocs.csv | stats count as Domain_IOC_COUNT ]
+| append [ | inputlookup MD5_iocs.csv    | stats count as MD5_IOC_COUNT    ]
+| append [ | inputlookup SHA256_iocs.csv | stats count as SHA256_IOC_COUNT ]
 | addtotals fieldname=sum
 | table sum
 | stats sum(sum) as grand_total
 | table grand_total
-```
 
 ```$NOOP_1$```</query>
           <earliest>-24h@h</earliest>
@@ -81,7 +79,7 @@
 | rename IP.id_orig_h as src
 | fields src
 | where isnotnull(src)
-| lookup local=t IP_iocs_KV indicator AS src OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t IP_iocs.csv indicator AS src OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats dc(src) as "Unique Source IP IOCs Found"
 
@@ -110,7 +108,7 @@
 | rename IP.id_orig_h as src
 | fields src
 | where isnotnull(src)
-| lookup local=t IP_iocs_KV indicator AS src OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t IP_iocs.csv indicator AS src OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats count
 ```$NOOP_1$```</query>
@@ -138,7 +136,7 @@
 | rename IP.id_resp_h as dest
 | fields dest
 | where isnotnull(dest)
-| lookup local=t IP_iocs_KV indicator AS dest OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t IP_iocs.csv indicator AS dest OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats dc(dest) as "Unique Destination IP IOCs Found"
 
@@ -167,7 +165,7 @@
 | rename IP.id_resp_h as dest
 | fields dest
 | where isnotnull(dest)
-| lookup local=t IP_iocs_KV indicator AS dest OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t IP_iocs.csv indicator AS dest OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats count
 ```$NOOP_1$```</query>
@@ -197,7 +195,7 @@
 | rename DNS.query as query
 | fields query
 | where isnotnull(query)
-| lookup local=t Domain_iocs_KV indicator AS query OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t Domain_iocs.csv indicator AS query OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats dc(query) as "Unique Query IOCs Found"
 
@@ -226,7 +224,7 @@
 | rename DNS.query as query
 | fields query
 | where isnotnull(query)
-| lookup local=t Domain_iocs_KV indicator AS query OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t Domain_iocs.csv indicator AS query OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats count
 ```$NOOP_1$```</query>
@@ -254,7 +252,7 @@
 | rename DNS.answer as answer
 | fields answer
 | where isnotnull(answer)
-| lookup local=t URL_iocs_KV indicator AS answer OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t URL_iocs.csv indicator AS answer OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats dc(answer) as "Unique URL Found"
 
@@ -285,7 +283,7 @@
 | rename DNS.answer as answer
 | fields answer
 | where isnotnull(answer)
-| lookup local=t URL_iocs_KV indicator AS answer OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t URL_iocs.csv indicator AS answer OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats count
 ```$NOOP_1$```</query>
@@ -315,7 +313,7 @@
 | rename Sysmon.MD5 as MD5
 | fields MD5
 | where isnotnull(MD5)
-| lookup local=t MD5_iocs_KV indicator AS MD5 OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t MD5_iocs.csv indicator AS MD5 OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats dc(src) as "Unique MD5 IOCs Found"
 
@@ -344,7 +342,7 @@
 | rename Sysmon.MD5 as MD5
 | fields MD5
 | where isnotnull(MD5)
-| lookup local=t MD5_iocs_KV indicator AS MD5 OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t MD5_iocs.csv indicator AS MD5 OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats count
 ```$NOOP_1$```</query>
@@ -372,7 +370,7 @@
 | rename Sysmon.SHA256 as SHA256
 | fields SHA256
 | where isnotnull(SHA256)
-| lookup local=t SHA256_iocs_KV indicator AS SHA256 OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t SHA256_iocs.csv indicator AS SHA256 OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats dc(SHA256) as "Unique SHA256 IOCs Found"
 
@@ -401,7 +399,7 @@
 | rename Sysmon.SHA256 as SHA256
 | fields SHA256
 | where isnotnull(SHA256)
-| lookup local=t SHA256_iocs_KV indicator AS SHA256 OUTPUT kill_chains, published_date, malware_families, actors
+| lookup local=t SHA256_iocs.csv indicator AS SHA256 OUTPUT kill_chains, published_date, malware_families, actors
 | where isnotnull(published_date)
 | stats count
 ```$NOOP_1$```</query>
@@ -431,7 +429,7 @@
 | rename IP.id_orig_h as src
 | fields src,_time
 | where isnotnull(src)
-| lookup local=t IP_iocs_KV indicator AS src OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
+| lookup local=t IP_iocs.csv indicator AS src OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
 | where isnotnull(published_date)
 | foreach kill_chains malware_families actors malicious_confidence
     [ eval &lt;&lt;FIELD&gt;&gt; = if(len('&lt;&lt;FIELD&gt;&gt;') == 0, "N/A", '&lt;&lt;FIELD&gt;&gt;')]
@@ -486,7 +484,7 @@
 | rename IP.id_resp_h as dest
 | fields dest,_time
 | where isnotnull(dest)
-| lookup local=t IP_iocs_KV indicator AS dest OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
+| lookup local=t IP_iocs.csv indicator AS dest OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
 | where isnotnull(published_date)
 | foreach kill_chains malware_families actors malicious_confidence
     [ eval &lt;&lt;FIELD&gt;&gt; = if(len('&lt;&lt;FIELD&gt;&gt;') == 0, "N/A", '&lt;&lt;FIELD&gt;&gt;')]
@@ -546,7 +544,7 @@
 | rename DNS.query as query
 | fields query,_time
 | where isnotnull(query)
-| lookup local=t Domain_iocs_KV indicator AS query OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
+| lookup local=t Domain_iocs.csv indicator AS query OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
 | where isnotnull(published_date)
 | foreach kill_chains malware_families actors malicious_confidence
     [ eval &lt;&lt;FIELD&gt;&gt; = if(len('&lt;&lt;FIELD&gt;&gt;') == 0, "N/A", '&lt;&lt;FIELD&gt;&gt;')]
@@ -600,7 +598,7 @@
 | rename DNS.answer as answer
 | fields answer,_time
 | where isnotnull(answer)
-| lookup local=t URL_iocs_KV indicator AS answer OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
+| lookup local=t URL_iocs.csv indicator AS answer OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
 | where isnotnull(published_date)
 | foreach kill_chains malware_families actors malicious_confidence
     [ eval &lt;&lt;FIELD&gt;&gt; = if(len('&lt;&lt;FIELD&gt;&gt;') == 0, "N/A", '&lt;&lt;FIELD&gt;&gt;')]
@@ -656,7 +654,7 @@
 | rename Sysmon.MD5 as MD5
 | fields MD5,_time
 | where isnotnull(MD5)
-| lookup local=t MD5_iocs_KV indicator AS MD5 OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
+| lookup local=t MD5_iocs.csv indicator AS MD5 OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
 | where isnotnull(published_date)
 | foreach kill_chains malware_families actors malicious_confidence
     [ eval &lt;&lt;FIELD&gt;&gt; = if(len('&lt;&lt;FIELD&gt;&gt;') == 0, "N/A", '&lt;&lt;FIELD&gt;&gt;')]
@@ -710,7 +708,7 @@
 | rename Sysmon.SHA256 as SHA256
 | fields SHA256,_time
 | where isnotnull(SHA256)
-| lookup local=t SHA256_iocs_KV indicator AS SHA256 OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
+| lookup local=t SHA256_iocs.csv indicator AS SHA256 OUTPUT kill_chains, published_date, malware_families, actors, malicious_confidence
 | where isnotnull(published_date)
 | foreach kill_chains malware_families actors malicious_confidence
     [ eval &lt;&lt;FIELD&gt;&gt; = if(len('&lt;&lt;FIELD&gt;&gt;') == 0, "N/A", '&lt;&lt;FIELD&gt;&gt;')]
