@@ -36,7 +36,7 @@
     <input type="radio" token="breakdown" searchWhenChanged="false">
       <label>Breakdown Level</label>
       <choice value="none">Summary</choice>
-      <choice value="main">Complete</choice>
+      <choice value="_internal">Complete</choice>
       <initialValue>none</initialValue>
       <default>none</default>
     </input>
