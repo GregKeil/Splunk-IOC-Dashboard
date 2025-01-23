@@ -9,8 +9,8 @@ This dashboard is designed to identify IOC matches from a lookup file.
   - https://splunkbase.splunk.com/app/5709
 - **TA For Zeek**
   - https://splunkbase.splunk.com/app/5466
-- **Hashes.json** (Datamodel) must be configured and installed
-- **Zeek.json** (Datamodel) must be configured and installed
+- **Hashes_Datamodel.json** must be configured and installed
+- **Zeek_Datamodel.json** must be configured and installed
 - **IP_iocs.csv** Lookup File (Data Needed)
 - **Domain_iocs.csv** Lookup File (Data Needed)
 - **URL_iocs.csv** Lookup File (Data Needed)
