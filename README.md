@@ -1,4 +1,4 @@
-# Splunk-IOC-Dashboard
+# IOC Dashboard For Splunk
 This dashboard is designed to identify IOC matches that the system administrator provides.
 
 ## Notes:
