@@ -75,7 +75,7 @@
       <single>
         <title>Unique Source IP Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.IP by IP.id_orig_h
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.IP by IP.id_orig_h
 | rename IP.id_orig_h as src
 | fields src
 | where isnotnull(src)
@@ -104,7 +104,7 @@
       <single>
         <title>Total Source IP Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.IP by IP.id_orig_h,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.IP by IP.id_orig_h,_time
 | rename IP.id_orig_h as src
 | fields src
 | where isnotnull(src)
@@ -132,7 +132,7 @@
       <single>
         <title>Unique Destination IP Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.IP by IP.id_resp_h
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.IP by IP.id_resp_h
 | rename IP.id_resp_h as dest
 | fields dest
 | where isnotnull(dest)
@@ -161,7 +161,7 @@
       <single>
         <title>Total Destination IP Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.IP by IP.id_resp_h,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.IP by IP.id_resp_h,_time
 | rename IP.id_resp_h as dest
 | fields dest
 | where isnotnull(dest)
@@ -191,7 +191,7 @@
       <single>
         <title>Unique Domain Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.DNS by DNS.query
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.DNS by DNS.query
 | rename DNS.query as query
 | fields query
 | where isnotnull(query)
@@ -220,7 +220,7 @@
       <single>
         <title>Total Domain Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.DNS by DNS.query,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.DNS by DNS.query,_time
 | rename DNS.query as query
 | fields query
 | where isnotnull(query)
@@ -248,7 +248,7 @@
       <single>
         <title>Unique URL Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.DNS by DNS.answer
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.DNS by DNS.answer
 | rename DNS.answer as answer
 | fields answer
 | where isnotnull(answer)
@@ -279,7 +279,7 @@
       <single>
         <title>Total URL Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.DNS by DNS.answer,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.DNS by DNS.answer,_time
 | rename DNS.answer as answer
 | fields answer
 | where isnotnull(answer)
@@ -309,7 +309,7 @@
       <single>
         <title>Unique MD5 Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Hashes.Sysmon by Sysmon.MD5
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Sysmon_Hashes.Sysmon by Sysmon.MD5
 | rename Sysmon.MD5 as MD5
 | fields MD5
 | where isnotnull(MD5)
@@ -338,7 +338,7 @@
       <single>
         <title>Total MD5 Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Hashes.Sysmon by Sysmon.MD5,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Sysmon_Hashes.Sysmon by Sysmon.MD5,_time
 | rename Sysmon.MD5 as MD5
 | fields MD5
 | where isnotnull(MD5)
@@ -366,7 +366,7 @@
       <single>
         <title>Unique SHA256 Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Hashes.Sysmon by Sysmon.SHA256
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Sysmon_Hashes.Sysmon by Sysmon.SHA256
 | rename Sysmon.SHA256 as SHA256
 | fields SHA256
 | where isnotnull(SHA256)
@@ -395,7 +395,7 @@
       <single>
         <title>Total SHA256 Hits</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Hashes.Sysmon by Sysmon.SHA256,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Sysmon_Hashes.Sysmon by Sysmon.SHA256,_time
 | rename Sysmon.SHA256 as SHA256
 | fields SHA256
 | where isnotnull(SHA256)
@@ -425,7 +425,7 @@
       <table>
         <title>Full Source IP Hit Listing</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.IP by IP.id_orig_h,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.IP by IP.id_orig_h,_time
 | rename IP.id_orig_h as src
 | fields src,_time
 | where isnotnull(src)
@@ -480,7 +480,7 @@
       <table>
         <title>Full Destination IP Hit Listing</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.IP by IP.id_resp_h,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.IP by IP.id_resp_h,_time
 | rename IP.id_resp_h as dest
 | fields dest,_time
 | where isnotnull(dest)
@@ -540,7 +540,7 @@
       <table>
         <title>Full Domain Hit Listing</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.DNS by DNS.query,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.DNS by DNS.query,_time
 | rename DNS.query as query
 | fields query,_time
 | where isnotnull(query)
@@ -594,7 +594,7 @@
       <table>
         <title>Full URL Hit Listing</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek.DNS by DNS.answer,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IP_DNS.DNS by DNS.answer,_time
 | rename DNS.answer as answer
 | fields answer,_time
 | where isnotnull(answer)
@@ -650,7 +650,7 @@
       <table>
         <title>Full MD5 Hit Listing</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Hashes.Sysmon by Sysmon.MD5,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Sysmon_Hashes.Sysmon by Sysmon.MD5,_time
 | rename Sysmon.MD5 as MD5
 | fields MD5,_time
 | where isnotnull(MD5)
@@ -704,7 +704,7 @@
       <table>
         <title>Full SHA256 Hit Listing</title>
         <search>
-          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Hashes.Sysmon by Sysmon.SHA256,_time
+          <query>| tstats summariesonly=$SumSearch$ count from datamodel=Sysmon_Hashes.Sysmon by Sysmon.SHA256,_time
 | rename Sysmon.SHA256 as SHA256
 | fields SHA256,_time
 | where isnotnull(SHA256)
