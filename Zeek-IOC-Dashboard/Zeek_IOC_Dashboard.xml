@@ -1,0 +1,486 @@
+<form version="1.1" theme="dark">
+  <label>Zeek IOC Dashboard (V2.1)</label>
+  <description>V2 Additions: Dashboard has been completely redesigned from the original IOC dashboard</description>
+  <search id="ZeekIP">
+    <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IOC.IP by IP.src_ip, IP.dest_ip, _time
+| rename IP.src_ip as src, IP.dest_ip AS dest
+	</query>
+    <earliest>$TimeSelection.earliest$</earliest>
+    <latest>$TimeSelection.latest$</latest>
+    <progress>
+      <set token="Formatting">| eval priority=if(visibility="High", 0, priority)
+| eval priority=if(visibility="Medium", 1, priority)
+| eval priority=if(visibility="Low", 2, priority)
+| eval priority=if(visibility="No Instances Found", 3, priority)
+| sort priority
+
+| rename kill_chains AS "Kill Chain",malware_families AS "Malware Family",actors AS "Actor",published_date AS "Publish Date", count AS "Count", malicious_confidence AS "Malicious Confidence"
+| appendpipe [| stats count | where count=0 | eval "Malicious Confidence"="No Instances Found" | eval Instance="-" | eval "Kill Chain"="-" | eval Actor="-" | eval "Malware Family"="-" | eval "Publish Date"="-" | rename count AS Count]</set>
+      <set token="ForEachFunction">| foreach kill_chains malware_families actors malicious_confidence [ eval &lt;&lt;FIELD&gt;&gt; = if(len('&lt;&lt;FIELD&gt;&gt;') == 0, "N/A", '&lt;&lt;FIELD&gt;&gt;')]</set>
+    </progress>
+    <done>
+      <set token="SrcLookup">| lookup local=t IP_iocs.csv indicator AS src_ip OUTPUT kill_chains, published_date, malware_families, actors
+| where isnotnull(published_date)</set>
+      <set token="DestLookup">| lookup local=t IP_iocs.csv indicator AS dest_ip OUTPUT kill_chains, published_date, malware_families, actors
+| where isnotnull(published_date)</set>
+    </done>
+  </search>
+  <search id="ZeekDNS">
+    <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IOC.DNS by DNS.query, DNS.answer, _time
+| rename DNS.query AS query, DNS.answer AS answer
+	</query>
+    <earliest>$TimeSelection.earliest$</earliest>
+    <latest>$TimeSelection.latest$</latest>
+    <done>
+      <set token="AnswerLookup">| where !like(answer, "-")
+| lookup local=t URL_iocs.csv indicator AS answer OUTPUT kill_chains, published_date, malware_families, actors
+| where isnotnull(published_date)</set>
+      <set token="QueryLookup">| where !like(query, "-")
+| lookup local=t Domain_iocs.csv indicator AS query OUTPUT kill_chains, published_date, malware_families, actors
+| where isnotnull(published_date)</set>
+    </done>
+  </search>
+  <search id="ZeekMD5">
+    <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IOC.MD5 by MD5.md5, _time
+| rename MD5.md5 AS md5
+	</query>
+    <earliest>$TimeSelection.earliest$</earliest>
+    <latest>$TimeSelection.latest$</latest>
+    <done>
+      <set token="MD5Lookup">| where !like(md5, "-")
+| lookup local=t MD5_iocs.csv indicator AS md5 OUTPUT kill_chains, published_date, malware_families, actors
+| where isnotnull(published_date)</set>
+    </done>
+  </search>
+  <fieldset submitButton="true" autoRun="true">
+    <html>
+       <style>
+         .btn {
+        font-family: monospace;
+        color: #000000;
+        background-color: #65A637  !important;
+           }
+         div.fieldset.dashboard-form-globalfieldset div.dashboard-element.html.dashboard-element-html {
+        display: inline-block;
+           }
+       </style>
+     </html>
+    <input type="time" token="TimeSelection" searchWhenChanged="true">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="radio" token="SumSearch">
+      <label>Summarized Search</label>
+      <choice value="f">Disabled</choice>
+      <choice value="t">Enabled</choice>
+      <default>f</default>
+    </input>
+  </fieldset>
+  <row>
+    <html>
+      <h3>Note: When querying against mass amounts of data, enable summarized search</h3>
+    </html>
+  </row>
+  <row>
+    <html>
+      <h1>Total IOCs Being Queried:</h1>
+    </html>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <search>
+          <query>
+| inputlookup IP_iocs.csv | stats count as IP_IOC_COUNT
+| append [ | inputlookup URL_iocs.csv    | stats count as URL_IOC_COUNT    ]
+| append [ | inputlookup Domain_iocs.csv | stats count as Domain_IOC_COUNT ]
+| append [ | inputlookup MD5_iocs.csv    | stats count as MD5_IOC_COUNT    ]
+| addtotals fieldname=sum
+| table sum
+| stats sum(sum) as grand_total
+| table grand_total</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Count of All IOCs Detectable in Splunk, not how many positive hits.</option>
+        <option name="unit">IOCs</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <html>
+      <h1>IOC Statistics</h1>
+    </html>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Unique Source IP Hits</title>
+        <search base="ZeekIP">
+          <query>| stats count by src
+$SrcLookup$
+| stats dc(src) as "Unique Source IP IOCs Found"</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
+        <option name="rangeValues">[0,5,10]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Source IP Hits</title>
+        <search base="ZeekIP">
+          <query>| fields src
+$SrcLookup$
+| stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
+        <option name="rangeValues">[0,5,15]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Unique Destination IP Hits</title>
+        <search base="ZeekIP">
+          <query>| stats count by dest
+$DestLookup$
+| stats dc(dest) as "Unique Destination IP IOCs Found"</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
+        <option name="rangeValues">[0,5,10]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Destination IP Hits</title>
+        <search base="ZeekDNS">
+          <query>| fields dest
+$DestLookup$
+| stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
+        <option name="rangeValues">[0,5,15]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Unique Domain Hits</title>
+        <search base="ZeekDNS">
+          <query>| stats count by query
+$QueryLookup$
+| stats dc(query) as "Unique Query IOCs Found"</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
+        <option name="rangeValues">[0,5,10]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Domain Hits</title>
+        <search base="ZeekDNS">
+          <query>| fields query
+$QueryLookup$
+| stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
+        <option name="rangeValues">[0,5,15]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Unique URL Hits</title>
+        <search>
+          <query>| stats count by answer
+$AnswerLookup$
+| stats dc(answer) as "Unique URL Found"</query>
+        </search>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
+        <option name="rangeValues">[0,5,10]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unitPosition">before</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total URL Hits</title>
+        <search>
+          <query>| fields answer
+$AnswerLookup$
+| stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
+        <option name="rangeValues">[0,5,15]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Unique MD5 Hits</title>
+        <search base="ZeekMD5">
+          <query>| stats count by md5
+$MD5Lookup$
+| stats dc(md5) as "Unique Query IOCs Found"</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
+        <option name="rangeValues">[0,5,10]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total MD5 Hits</title>
+        <search base="ZeekMD5">
+          <query>| fields MD5
+$MD5Lookup$
+| stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
+        <option name="rangeValues">[0,5,15]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+    <row>
+    <html>
+      <h1>IOC Breakdown</h1>
+    </html>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Full Source IP Hit Listing</title>
+        <search base="ZeekIP">
+          <query>| fields src_ip, _time
+$SrcLookup$
+$ForEachFunction$
+| stats count by  malicious_confidence, src_ip, kill_chains, actors, malware_families, published_date
+| rename src_ip AS "Instance"
+$Formatting$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <format type="color" field="Malicious Confidence">
+          <colorPalette type="map">{"High":#bd1717,"Medium":#de8818,"Low":#cfc023,"No Instances Found":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Actor">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Instance">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Kill Chain">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Malware Family">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Publish Date">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="list">[#10ad05,#cfc023,#de8818,#bd1717]</colorPalette>
+          <scale type="threshold">1,5,10</scale>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Full Destination IP Hit Listing</title>
+        <search base="ZeekIP">
+          <query>| fields dest_ip, _time
+$DestLookup$
+$ForEachFunction$
+|stats count by  malicious_confidence, dest_ip, kill_chains, actors, malware_families, published_date
+| rename dest_ip AS "Instance"
+$Formatting$</query>
+        </search>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="Malicious Confidence">
+          <colorPalette type="map">{"High":#bd1717,"Medium":#de8818,"Low":#cfc023,"No Instances Found":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Instance">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Kill Chain">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Actor">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Malware Family">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Publish Date">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="list">[#10ad05,#cfc023,#de8818,#bd1717]</colorPalette>
+          <scale type="threshold">1,5,10</scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Full Domain Hit Listing</title>
+        <search base="ZeekDNS">
+          <query>| fields query,_time
+$QueryLookup$
+$ForEachFunction$
+|stats count by  malicious_confidence,query, kill_chains, actors, malware_families, published_date
+| rename query AS "Instance"
+$Formatting$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <format type="color" field="Malicious Confidence">
+          <colorPalette type="map">{"High":#bd1717,"Medium":#de8818,"Low":#cfc023,"No Instances Found":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Instance">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Kill Chain">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Actor">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Malware Family">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Publish Date">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="list">[#10ad05,#cfc023,#de8818,#bd1717]</colorPalette>
+          <scale type="threshold">1,5,10</scale>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Full URL Hit Listing</title>
+        <search base="ZeekDNS">
+          <query>| fields answer,_time
+$QueryLookup$
+$ForEachFunction$
+|stats count by  malicious_confidence, answer, kill_chains, actors, malware_families, published_date
+| rename answer AS "Instance"
+$Formatting$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <format type="color" field="Malicious Confidence">
+          <colorPalette type="map">{"High":#bd1717,"Medium":#de8818,"Low":#cfc023,"No Instances Found":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Instance">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Kill Chain">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Actor">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Malware Family">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Publish Date">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="list">[#10ad05,#cfc023,#de8818,#bd1717]</colorPalette>
+          <scale type="threshold">1,5,10</scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Full MD5 Hit Listing</title>
+        <search base="ZeekMD5">
+          <query>| fields md5,_time
+$MD5Lookup$
+$ForEachFunction$
+|stats count by malicious_confidence, md5, kill_chains, actors, malware_families, published_date
+| rename md5 AS "Instance"
+$Formatting$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <format type="color" field="Malicious Confidence">
+          <colorPalette type="map">{"High":#bd1717,"Medium":#de8818,"Low":#cfc023,"No Instances Found":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Instance">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Kill Chain">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Actor">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Malware Family">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Publish Date">
+          <colorPalette type="map">{"-":#10ad05}</colorPalette>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="list">[#10ad05,#cfc023,#de8818,#bd1717]</colorPalette>
+          <scale type="threshold">1,5,10</scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+</form>
